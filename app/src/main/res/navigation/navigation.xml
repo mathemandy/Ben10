@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/filterFragment"
+    android:id="@+id/navigation">
+
+    <fragment
+        android:id="@+id/filterFragment"
+        android:name="ng.mathemandy.venten.presentation.ui.FilterFragment"
+        android:label="fragment_filter"
+        tools:layout="@layout/fragment_filter">
+        <action
+            android:id="@+id/action_filtersFragment_to_CarsFragment"
+            app:destination="@id/fragment_cars"
+
+            />
+
+
+    </fragment>
+
+
+    <fragment
+        android:id="@+id/fragment_cars"
+        android:name="ng.mathemandy.venten.presentation.ui.CarsFragment"
+        android:label="CarsFragment"
+        tools:layout="@layout/fragment_car"
+        >
+
+        <argument
+            android:name="Filter"
+            app:argType="ng.mathemandy.venten.data.model.Filter" />
+    </fragment>
+</navigation>
