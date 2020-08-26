@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.android.synthetic.main.fragment_car.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
@@ -17,8 +16,6 @@ import ng.mathemandy.venten.presentation.AppResource
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.charset.Charset
-import java.util.*
-import kotlin.coroutines.CoroutineContext
 
 class CarsViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -57,8 +54,6 @@ class CarsViewModel(application: Application) : AndroidViewModel(application) {
                     line = it
                 } != null) {
                 val st: List<String>? = line?.split(",")
-
-                if ("${st?.get(0)}}" != "id") {
                     val car = Car(
                         id = st?.get(0),
                         first_name = st?.get(1),
@@ -75,13 +70,9 @@ class CarsViewModel(application: Application) : AndroidViewModel(application) {
                     carList.add(car)
                 }
 
-            }
-            val filtered = carList.filter { (
-                    filter.gender == it.gender &&
-                            filter.colors.contains(it.car_color) &&
-                            filter.countries.contains(it.country) &&
-                            (filter.start_year <=  it.car_model_year?.toInt() ?:0 && it.car_model_year?.toInt() ?: 0 <= filter.end_year  )) }
-            emit(filtered)
+
+            carList.removeFirst()
+            emit(carList.filterBy(filter))
 
         }.flowOn(Dispatchers.IO)
 
@@ -100,15 +91,32 @@ class CarsViewModel(application: Application) : AndroidViewModel(application) {
         try {
             collect { value -> emit(value) }
         } catch (e: Throwable) {
+            e.printStackTrace()
             mFetchCarsLiveData.postValue(AppResource.failed(e.message))
         }
     }
 }
 
-private fun  List<String>.toLowerCase(): List<String> {
-    this.map { it.toLowerCase(Locale.getDefault())
-    }
+ fun  MutableList<Car>.filterBy(filter: Filter): List<Car> {
+    val filtered =  this.filter {
+        val isSameGender  = filter.gender.equals(it.gender, ignoreCase = true)
+        val containsColor  =   filter.colors.containsIgnoringCase(it.car_color ?:  "")
+        val containsCountry  =    filter.countries.containsIgnoringCase(it.country ?: "")
+        val isGreaterOrEqualToStarYear  = it.car_model_year?.toIntOrNull() ?:0  >= filter.start_year
+        val isLesserThanOrEqualToEndYear  = it.car_model_year?.toIntOrNull() ?: 0 <= filter.end_year
 
-    return  this
+        isSameGender && containsColor && containsCountry && (isGreaterOrEqualToStarYear && isLesserThanOrEqualToEndYear)
+        }
 
+    return filtered
 }
+
+private fun  List<String>.containsIgnoringCase(carColor: String): Boolean {
+    this.forEach {
+        if (it.contains(carColor, ignoreCase = true)){
+            return true
+        }
+    }
+        return false
+}
+
